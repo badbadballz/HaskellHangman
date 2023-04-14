@@ -3,35 +3,61 @@ module A6 where
 import Provided
 
 import Data.List ( intersperse, sort )
+import Data.Char (isAlpha)
 
 -- *** A6-0: WARM-UP *** --
 
 -- Q#01
+type Chances = Int
+type Guess = String
+type Move = Char
+type Secret = String
+type Dictionary = [String]
 
 
 -- Q#02
-data GameException
+data GameException = InvalidWord | InvalidMove | RepeatMove | GameOver deriving (Eq, Show)
 
 -- Q#03
 
-lengthInRange = undefined
+lengthInRange :: Secret -> Bool
+lengthInRange s = let ls = length s
+                      min = fst _LENGTH_
+                      max = snd _LENGTH_
+                      in min <= ls && ls <= max
+
 
 -- Q#04
 
-invalidMove = undefined
+invalidMove :: Move -> Bool
+invalidMove = isAlpha 
 
 -- Q#05
+-- char -> String -> String -> string
+revealLetters :: Move -> Secret -> Guess -> Guess
+revealLetters m s g = zipWith (\a b -> if a == m then m else b) s g
 
-revealLetters = undefined
+test1 = "secret"
+test1a = "______"
+test2 = "helloworld"
+test2a = "__________"
 
 -- Q#06
-
-updateChances = undefined
+updateChances :: Move -> Secret -> Chances -> Chances
+updateChances m s c 
+    | m `elem` s = c
+    | otherwise = c - 1
 
 -- Q#07
 
-setSecret = undefined
-
+setSecret :: IO Secret
+setSecret = do
+              putStr "Enter a secret word:\t"
+              showInput False
+              s <- getLine
+              showInput True
+              _SPACE_
+              return s
 
 -- *** A6-1: Records & Instances *** --
 
