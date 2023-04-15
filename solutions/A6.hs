@@ -3,7 +3,7 @@ module A6 where
 import Provided
 
 import Data.List ( intersperse, sort )
-import Data.Char (isAlpha)
+import Data.Char (isAlpha, toUpper, toLower)
 
 -- *** A6-0: WARM-UP *** --
 
@@ -16,8 +16,15 @@ type Dictionary = [String]
 
 
 -- Q#02
-data GameException = InvalidWord | InvalidMove | RepeatMove | GameOver deriving (Eq, Show)
+data GameException = InvalidWord | InvalidMove | RepeatMove | GameOver deriving Eq
 
+{-
+instance Show GameException where
+  show InvalidWord = "Invalid word"
+  show InvalidMove = "Invalid move"
+  show RepeatMove = "Repeat move"
+  show GameOver = "Game over"
+-}
 -- Q#03
 
 lengthInRange :: Secret -> Bool
@@ -28,7 +35,7 @@ lengthInRange s = let ls = length s
 
 
 -- Q#04
-
+-- is a invalid move true or false?
 invalidMove :: Move -> Bool
 invalidMove = isAlpha 
 
@@ -62,21 +69,39 @@ setSecret = do
 -- *** A6-1: Records & Instances *** --
 
 -- Q#08
-data Game
+data Game = Game { secret :: Secret,
+                   guess :: Guess,
+                   moves :: [Move],
+                   chances :: Chances
+                 } deriving Eq 
+
 
 -- Q#09
-
-repeatedMove = undefined
+repeatedMove :: Move -> Game -> Bool
+repeatedMove m g = let ms = moves g
+                    in m `elem` ms
 
 -- Q#10
+makeGame :: Secret -> Game
+makeGame s = let s' = map (toUpper) s
+                 g = replicate (length s) '_' -- how to use const instead??
+                 ms = []
+              in Game { secret = s', guess = g, moves = ms, chances = _CHANCES_}   
 
-makeGame = undefined
+testGame = makeGame "hahaha"
 
 -- Q#11
 
-updateGame = undefined
+-- lower case and upper case letters?
+updateGame :: Move -> Game -> Game
+updateGame m g = let gu = revealLetters m (secret g) (guess g)
+                     cu = updateChances m (secret g) (chances g)
+                   in g {guess = gu, moves = m : moves g, chances = cu}   
 
 -- Q#12
+
+instance Show Game where
+  show g = showGameHelper (secret g) (moves g) (chances g)
 
 showGameHelper :: String -> [Char] -> Int -> String
 showGameHelper game moves chances = unlines [
@@ -89,34 +114,45 @@ showGameHelper game moves chances = unlines [
 
 
 -- Q#13
+instance Show GameException where
+  show InvalidWord = "Invalid word"
+  show InvalidMove = "Invalid move"
+  show RepeatMove = "Repeat move"
+  show GameOver = "Game over"
 
 
 -- *** A6-2: Exception Contexts *** --
 
 -- Q#14
-
-toMaybe = undefined
+toMaybe :: Bool -> a -> Maybe a
+toMaybe True a = Just a
+toMaybe False _ = Nothing  
 
 -- Q#15
-
-validateSecret = undefined
+-- not sure yet what the Right return should be? should be ok
+validateSecret :: (Secret -> Bool) -> Secret -> Either GameException Secret
+validateSecret f s 
+    | f s = Right s
+    | otherwise = Left InvalidWord
 
 -- Q#16
 
-hasValidChars = undefined
+hasValidChars :: Secret -> Either GameException Secret
+hasValidChars = validateSecret (all isAlpha) 
 
+isValidLength :: Secret -> Either GameException Secret
+isValidLength = validateSecret lengthInRange  
 
-isValidLength = undefined
-
-
-isInDict = undefined
+isInDict :: Dictionary -> Secret -> Either GameException Secret
+isInDict d = validateSecret (\x -> (map toLower x) `elem` d) 
 
 -- Q#17
+validateNoDict :: Secret -> Either GameException Secret
+validateNoDict s = hasValidChars s >>= isValidLength
 
-validateNoDict = undefined
-
-validateWithDict = undefined
+validateWithDict :: Dictionary -> Secret -> Either GameException Secret
+validateWithDict d s = validateNoDict s >>= isInDict d 
 
 -- Q#18
-
+processTurn :: Move -> Game -> Either GameException Game
 processTurn = undefined
