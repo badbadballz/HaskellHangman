@@ -4,7 +4,6 @@ import Provided
 
 import Data.List ( intersperse, sort )
 import Data.Char (isAlpha, toUpper, toLower)
-import GHC.Real (gcdInt')
 
 -- *** A6-0: WARM-UP *** --
 
