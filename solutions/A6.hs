@@ -4,6 +4,7 @@ import Provided
 
 import Data.List ( intersperse, sort )
 import Data.Char (isAlpha, toUpper, toLower)
+import GHC.Real (gcdInt')
 
 -- *** A6-0: WARM-UP *** --
 
@@ -37,7 +38,7 @@ lengthInRange s = let ls = length s
 -- Q#04
 -- is a invalid move true or false?
 invalidMove :: Move -> Bool
-invalidMove = isAlpha 
+invalidMove = not.isAlpha 
 
 -- Q#05
 -- char -> String -> String -> string
@@ -89,6 +90,8 @@ makeGame s = let s' = map (toUpper) s
               in Game { secret = s', guess = g, moves = ms, chances = _CHANCES_}   
 
 testGame = makeGame "hahaha"
+testGame2 = Game {secret = "hahaha", guess = "______", moves = ['c','b','d','e','f'], chances = 2}
+testGame3 = Game {secret = "hahaha", guess = "______", moves = ['c','b','d','e','f','g'], chances = 1}
 
 -- Q#11
 
@@ -101,7 +104,7 @@ updateGame m g = let gu = revealLetters m (secret g) (guess g)
 -- Q#12
 
 instance Show Game where
-  show g = showGameHelper (secret g) (moves g) (chances g)
+  show g = showGameHelper (guess g) (moves g) (chances g)
 
 showGameHelper :: String -> [Char] -> Int -> String
 showGameHelper game moves chances = unlines [
@@ -115,10 +118,10 @@ showGameHelper game moves chances = unlines [
 
 -- Q#13
 instance Show GameException where
-  show InvalidWord = "Invalid word"
-  show InvalidMove = "Invalid move"
-  show RepeatMove = "Repeat move"
-  show GameOver = "Game over"
+  show InvalidWord = "Invalid word, enter again."
+  show InvalidMove = "Invalid move, try again."
+  show RepeatMove = "Repeated move, try again."
+  show GameOver = "Game over!"
 
 
 -- *** A6-2: Exception Contexts *** --
@@ -155,4 +158,10 @@ validateWithDict d s = validateNoDict s >>= isInDict d
 
 -- Q#18
 processTurn :: Move -> Game -> Either GameException Game
-processTurn = undefined
+processTurn m g 
+      | invalidMove m = Left InvalidMove
+      | repeatedMove m g = Left RepeatMove
+      | otherwise = if chances g' <= 0 then Left GameOver
+                      else Right g'
+                      where
+                        g' = updateGame m g
