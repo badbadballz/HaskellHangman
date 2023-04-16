@@ -6,7 +6,7 @@ import A7
 
 import Control.Monad
 import Control.Monad.State
-
+import Data.Char (toUpper)
 -- *** A8: Monads *** --
 
 -- Q#01
@@ -67,14 +67,46 @@ runApp = do
 --putStrLn "Welcome to Part II of EMURGO Academy's Haskell course!"
 
 -- Q#05
+makeGameS :: Secret -> State Game ()
+makeGameS st =  put g
+                    where
+                          g = let s' = map (toUpper) st
+                                  gs = replicate (length st) '_' -- how to use const instead??
+                                  ms = []
+                                  in Game { secret = s', guess = gs, moves = ms, chances = _CHANCES_} 
+{-
+updateGameS :: Move -> State Game ()
+updateGameS m = do
+                 g <- get
+                 let gu = revealLetters m (secret g) (guess g)
+                     cu = updateChances m (secret g) (chances g)
+                     g' = g {guess = gu, moves = m : moves g, chances = cu}  
+                   in put g' 
+-}
+updateGameS :: Move -> State Game ()
+updateGameS m = modify (updateGame m)
 
-makeGameS = undefined
-
-
-updateGameS = undefined
-
-
-repeatedMoveS = undefined
-
-
-processTurnS = undefined
+repeatedMoveS :: Move -> State Game Bool
+repeatedMoveS m = gets (repeatedMove m)
+{-}
+processTurn :: Move -> Game -> Either GameException Game
+processTurn m g 
+      | invalidMove m = Left InvalidMove
+      | repeatedMove m g = Left RepeatMove
+      | otherwise = if chances g' <= 0 then Left GameOver
+                      else Right g'
+                      where
+                        g' = updateGame m g
+-}
+processTurnS :: Move -> State Game (Either GameException ())
+processTurnS m 
+        | invalidMove m = return $ Left InvalidMove
+        | otherwise = do
+                        r <- repeatedMoveS m -- why did runState (repeatedMoveS) return a type error??
+                        if r then return $ Left RepeatMove
+                        else do
+                               updateGameS m
+                               g' <- get
+                               if chances g' <= 0 then return $ Left GameOver
+                                  else return $ Right ()
+                                     
