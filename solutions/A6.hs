@@ -150,10 +150,18 @@ isInDict d = validateSecret (\x -> (map toLower x) `elem` d)
 
 -- Q#17
 validateNoDict :: Secret -> Either GameException Secret
-validateNoDict s = hasValidChars s >>= isValidLength
+validateNoDict s = case hasValidChars s of Left err -> Left err    
+                                           Right s -> case isValidLength s of Left err -> Left err
+                                                                              Right s -> Right s
+
+--validateNoDict s = hasValidChars s >>= isValidLength
 
 validateWithDict :: Dictionary -> Secret -> Either GameException Secret
-validateWithDict d s = validateNoDict s >>= isInDict d 
+validateWithDict d s = case validateNoDict s of Left err -> Left err
+                                                Right s -> case isInDict d s of Left err -> Left err
+                                                                                Right s -> Right s
+
+--validateWithDict d s = validateNoDict s >>= isInDict d 
 
 -- Q#18
 processTurn :: Move -> Game -> Either GameException Game
